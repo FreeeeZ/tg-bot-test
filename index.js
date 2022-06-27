@@ -1,25 +1,37 @@
 const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios').default;
 
 const token = '5473712332:AAEFcDmFcY8NTUQsHXWYZhLs4Xgzj1pBbnU';
 
-// включаем самого обота
 const bot = new TelegramBot(token, {polling: true});
 
-//конфиг клавиатуры
 const keyboard = [
   [
     {
-      text: 'Хочу кота', // текст на кнопке
-      callback_data: 'moreKeks' // данные для обработчика событий
+      text: 'Курс рубля',
+      callback_data: 'eur'
     }
   ],
   [
     {
-      text: 'Хочу песика',
-      callback_data: 'morePes'
+      text: 'Курс доллара',
+      callback_data: 'usd'
     }
   ]
 ];
+
+const getCourse = () => {
+  return new Promise((resolve, reject) => {
+    axios.get('https://www.cbr-xml-daily.ru/daily_json.js')
+      .then(function (response) {
+        resolve(response)
+      })
+      .catch(function (e) {
+        reject(e)
+        return `Ошибка запроса: ${e}`
+      })
+  })
+}
 
 const botStart = () => {
   bot.setMyCommands([
@@ -46,37 +58,18 @@ const botStart = () => {
 
     return bot.sendMessage(chatId, 'Я такой команды не знаю, попробуй еще раз')
   });
+
+
+  bot.on('callback_query', async (query) => {
+    const chatId = query.message.chat.id
+    let courses = {}
+
+    await getCourse().then(function(response) {
+      courses = response.data.Valute;
+    });
+
+    return bot.sendMessage(chatId, `Курс ${query.data.toUpperCase()}: ${courses[query.data.toUpperCase()].Value} RUB`)
+  });
 };
 
 botStart()
-
-
-
-// // обработчик событий нажатий на клавиатуру
-// bot.on('callback_query', (query) => {
-//   const chatId = query.message.chat.id;
-//
-//   let img = '';
-//
-//   if (query.data === 'moreKeks') { // если кот
-//     img = 'keks.png';
-//   }
-//
-//   if (query.data === 'morePes') { // если пёс
-//     img = 'pes.png';
-//   }
-//
-//   if (img) {
-//     bot.sendPhoto(chatId, img, { // прикрутим клаву
-//       reply_markup: {
-//         inline_keyboard: keyboard
-//       }
-//     });
-//   } else {
-//     bot.sendMessage(chatId, 'Непонятно, давай попробуем ещё раз?', { // прикрутим клаву
-//       reply_markup: {
-//         inline_keyboard: keyboard
-//       }
-//     });
-//   }
-// });
