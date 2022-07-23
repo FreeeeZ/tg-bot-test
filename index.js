@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios').default;
 
-const token = '5473712332:AAEFcDmFcY8NTUQsHXWYZhLs4Xgzj1pBbnU';
+const token = '<PUT_YOUR_TOKEN>';
 
 const bot = new TelegramBot(token, {polling: true});
 
